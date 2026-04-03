@@ -568,7 +568,100 @@ function DashboardContent() {
 
 // ------ Products Management Page ------
 
+function AddProductModal({ onClose, onAddProduct }) {
+  const [productName, setProductName] = useState('');
+  const [description, setDescription] = useState('');
+  const [gstRate, setGstRate] = useState(18);
+  const [unitPrice, setUnitPrice] = useState('');
+
+  return (
+    <div className="modal-overlay">
+      <div className="modal-content invoice-modal" style={{ maxWidth: '500px' }}>
+        <div className="modal-header">
+          <h2>Add New Product</h2>
+          <button className="btn-close" onClick={onClose}><X size={18} /></button>
+        </div>
+        
+        <div className="modal-body">
+          <div className="form-section" style={{ marginBottom: 0 }}>
+            <div className="form-group" style={{ marginBottom: '1rem' }}>
+              <label className="form-label">Product Name *</label>
+              <input 
+                type="text" 
+                className="form-input" 
+                placeholder="e.g. Premium Consulting Service" 
+                value={productName}
+                onChange={(e) => setProductName(e.target.value)}
+              />
+            </div>
+
+            <div className="form-group" style={{ marginBottom: '1rem' }}>
+              <label className="form-label">Description</label>
+              <textarea 
+                className="form-textarea" 
+                placeholder="Brief description of the product or service" 
+                rows="3"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+              />
+            </div>
+
+            <div className="grid-2-col" style={{ marginBottom: '1rem' }}>
+              <div className="form-group">
+                <label className="form-label">GST Rate (%) *</label>
+                <select 
+                  className="form-input"
+                  value={gstRate}
+                  onChange={(e) => setGstRate(Number(e.target.value))}
+                >
+                  <option value={0}>0% GST</option>
+                  <option value={5}>5% GST</option>
+                  <option value={12}>12% GST</option>
+                  <option value={18}>18% GST</option>
+                  <option value={28}>28% GST</option>
+                </select>
+              </div>
+              
+              <div className="form-group">
+                <label className="form-label">Unit Price (₹) *</label>
+                <input 
+                  type="number" 
+                  className="form-input" 
+                  placeholder="0.00" 
+                  value={unitPrice}
+                  onChange={(e) => setUnitPrice(e.target.value)}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="modal-footer" style={{ borderTop: '1px solid #e2e8f0', padding: '1.25rem 1.5rem', display: 'flex', justifyContent: 'flex-end', gap: '1rem', backgroundColor: '#f8fafc' }}>
+          <button className="btn-cancel" onClick={onClose} style={{ padding: '0.4rem 1rem', border: '1px solid #cbd5e1', backgroundColor: 'white', borderRadius: '0.375rem', fontWeight: 600, color: '#64748b', cursor: 'pointer' }}>Cancel</button>
+          <button className="btn-submit" onClick={() => {
+            if (productName && unitPrice) {
+              onAddProduct({
+                id: Math.floor(Math.random() * 1000).toString(),
+                name: productName,
+                desc: description,
+                gst: gstRate + '%',
+                price: `₹${parseFloat(unitPrice).toFixed(2)}`
+              });
+            }
+            onClose();
+          }} style={{ padding: '0.4rem 1rem', backgroundColor: '#2563eb', color: 'white', border: 'none', borderRadius: '0.375rem', fontWeight: 600, cursor: 'pointer' }}>Add Product</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function ProductsPage() {
+  const [isAddProductModalOpen, setIsAddProductModalOpen] = useState(false);
+  const [products, setProducts] = useState([
+    { id: '1', name: 'Premium Service', desc: 'Standard professional consulting', gst: '18%', price: '₹15,000.00' }
+  ]);
+
   return (
     <main className="dashboard-content products-page">
       <div className="products-header">
@@ -578,7 +671,7 @@ function ProductsPage() {
         </div>
         <div className="total-products-badge">
           <div className="label">Total Products</div>
-          <div className="value">1</div>
+          <div className="value">{products.length}</div>
         </div>
       </div>
 
@@ -589,7 +682,7 @@ function ProductsPage() {
         </div>
         <div className="toolbar-buttons">
           <button className="btn-filter"><Filter size={16} /> Filters</button>
-          <button className="btn-action"><Plus size={16} /> Add Product</button>
+          <button className="btn-action" onClick={() => setIsAddProductModalOpen(true)}><Plus size={16} /> Add Product</button>
           <button className="btn-export"><Download size={16} /> Export Excel</button>
           <button className="btn-import"><Upload size={16} /> Import Excel</button>
         </div>
@@ -609,20 +702,22 @@ function ProductsPage() {
             </tr>
           </thead>
           <tbody>
-            <tr>
-              <td><input type="checkbox" /></td>
-              <td>1</td>
-              <td style={{fontWeight: 600, color: '#1e293b'}}>Premium Service</td>
-              <td style={{color: '#64748b'}}>Standard professional consulting</td>
-              <td>18%</td>
-              <td style={{fontWeight: 600}}>₹15,000.00</td>
-              <td>
-                <div style={{display: 'flex', gap: '0.5rem', justifyContent: 'center'}}>
-                  <button className="btn-edit">Edit</button>
-                  <button className="btn-delete">Delete</button>
-                </div>
-              </td>
-            </tr>
+            {products.map((prod, index) => (
+              <tr key={prod.id}>
+                <td><input type="checkbox" /></td>
+                <td>{index + 1}</td>
+                <td style={{fontWeight: 600, color: '#1e293b'}}>{prod.name}</td>
+                <td style={{color: '#64748b'}}>{prod.desc}</td>
+                <td>{prod.gst}</td>
+                <td style={{fontWeight: 600}}>{prod.price}</td>
+                <td>
+                  <div style={{display: 'flex', gap: '0.5rem', justifyContent: 'center'}}>
+                    <button className="btn-edit">Edit</button>
+                    <button className="btn-delete" onClick={() => setProducts(products.filter(p => p.id !== prod.id))}>Delete</button>
+                  </div>
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>
@@ -633,8 +728,10 @@ function ProductsPage() {
           <div className="page-number">1</div>
           <button className="btn-page" disabled>Next &rarr;</button>
         </div>
-        <div className="pagination-text">1 products</div>
+        <div className="pagination-text">{products.length} products</div>
       </div>
+
+      {isAddProductModalOpen && <AddProductModal onClose={() => setIsAddProductModalOpen(false)} onAddProduct={(newProd) => setProducts([...products, newProd])} />}
     </main>
   );
 }
@@ -992,8 +1089,97 @@ function InvoicesPage() {
 
 // ------ Container App ------
 
+function CreateExpenseModal({ onClose, onAddExpense }) {
+  const [category, setCategory] = useState('Travel');
+  const [description, setDescription] = useState('');
+  const [amount, setAmount] = useState('');
+  const [date, setDate] = useState('');
+
+  return (
+    <div className="modal-overlay">
+      <div className="modal-content invoice-modal" style={{ maxWidth: '500px' }}>
+        <div className="modal-header">
+          <h2>Create New Expense</h2>
+          <button className="btn-close" onClick={onClose}><X size={18} /></button>
+        </div>
+        
+        <div className="modal-body">
+          <div className="form-section" style={{ marginBottom: 0 }}>
+            <div className="form-group" style={{ marginBottom: '1rem' }}>
+              <label className="form-label">Category *</label>
+              <select 
+                className="form-input"
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+              >
+                <option value="Travel">Travel</option>
+                <option value="Marketing">Marketing</option>
+                <option value="Internet">Internet</option>
+                <option value="Software License">Software License</option>
+                <option value="Office Rent">Office Rent</option>
+                <option value="Cloud Services">Cloud Services</option>
+              </select>
+            </div>
+
+            <div className="form-group" style={{ marginBottom: '1rem' }}>
+              <label className="form-label">Description</label>
+              <textarea 
+                className="form-textarea" 
+                placeholder="Details about the expense" 
+                rows="3"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+              />
+            </div>
+
+            <div className="grid-2-col" style={{ marginBottom: '1rem' }}>
+              <div className="form-group">
+                <label className="form-label">Amount (₹) *</label>
+                <input 
+                  type="number" 
+                  className="form-input" 
+                  placeholder="0.00" 
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                />
+              </div>
+              
+              <div className="form-group">
+                <label className="form-label">Date *</label>
+                <input 
+                  type="date" 
+                  className="form-input" 
+                  value={date}
+                  onChange={(e) => setDate(e.target.value)}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="modal-footer" style={{ borderTop: '1px solid #e2e8f0', padding: '1.25rem 1.5rem', display: 'flex', justifyContent: 'flex-end', gap: '1rem', backgroundColor: '#f8fafc' }}>
+          <button className="btn-cancel" onClick={onClose} style={{ padding: '0.4rem 1rem', border: '1px solid #cbd5e1', backgroundColor: 'white', borderRadius: '0.375rem', fontWeight: 600, color: '#64748b', cursor: 'pointer' }}>Cancel</button>
+          <button className="btn-submit" onClick={() => {
+            if (amount && date) {
+              onAddExpense({
+                id: Math.floor(Math.random() * 1000).toString(),
+                category: category,
+                desc: description,
+                amount: `₹${parseFloat(amount).toFixed(2)}`,
+                date: new Date(date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+              });
+            }
+            onClose();
+          }} style={{ padding: '0.4rem 1rem', backgroundColor: '#2563eb', color: 'white', border: 'none', borderRadius: '0.375rem', fontWeight: 600, cursor: 'pointer' }}>Create Expense</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function ExpensesPage() {
-  const expenses = [
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [expenses, setExpenses] = useState([
     { id: '309', category: 'Travel', desc: 'Monthly business expense 15', amount: '₹546.00', date: '10 Dec 2025' },
     { id: '308', category: 'Marketing', desc: 'Monthly business expense 14', amount: '₹2,185.00', date: '7 Jan 2026' },
     { id: '307', category: 'Internet', desc: 'Monthly business expense 13', amount: '₹1,137.00', date: '1 Feb 2026' },
@@ -1001,7 +1187,15 @@ function ExpensesPage() {
     { id: '305', category: 'Marketing', desc: 'Monthly business expense 11', amount: '₹3,725.00', date: '26 Jan 2026' },
     { id: '304', category: 'Office Rent', desc: 'Monthly business expense 10', amount: '₹11,262.00', date: '21 Dec 2025' },
     { id: '303', category: 'Cloud Services', desc: 'Monthly business expense 9', amount: '₹5,139.00', date: '20 Dec 2025' },
-  ];
+  ]);
+
+  const handleAddExpense = (newExpense) => {
+    setExpenses([newExpense, ...expenses]);
+  };
+
+  const handleDeleteExpense = (id) => {
+    setExpenses(expenses.filter(exp => exp.id !== id));
+  };
 
   const getCategoryClass = (cat) => {
     const map = {
@@ -1035,7 +1229,7 @@ function ExpensesPage() {
         </div>
         <div className="toolbar-buttons">
           <button className="btn-filter"><Filter size={16} /> Filters</button>
-          <button className="btn-action"><Plus size={16} /> Create Expense</button>
+          <button className="btn-action" onClick={() => setIsModalOpen(true)}><Plus size={16} /> Create Expense</button>
           <button className="btn-export"><Download size={16} /> Export Excel</button>
           <button className="btn-filter"><Upload size={16} /> Import Excel</button>
         </div>
@@ -1068,7 +1262,7 @@ function ExpensesPage() {
                     <button className="action-btn view">View</button>
                     <button className="action-btn edit">Edit</button>
                     <button className="action-btn download">Download</button>
-                    <button className="action-btn delete">Delete</button>
+                    <button className="action-btn delete" onClick={() => handleDeleteExpense(exp.id)}>Delete</button>
                   </div>
                 </td>
               </tr>
@@ -1076,6 +1270,7 @@ function ExpensesPage() {
           </tbody>
         </table>
       </div>
+      {isModalOpen && <CreateExpenseModal onClose={() => setIsModalOpen(false)} onAddExpense={handleAddExpense} />}
     </main>
   );
 }
