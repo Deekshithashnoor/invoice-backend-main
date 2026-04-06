@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import './App.css';
-import { 
-  Menu, Bell, User, LayoutDashboard, Box, FileText, 
+import {
+  Menu, Bell, User, LayoutDashboard, Box, FileText,
   BarChart2, Users, CreditCard, Settings, Shield, Lock, LogOut,
   Mail, Search, Filter, Plus, Download, Upload,
   EyeOff, Mic, RefreshCw, X, Clock, CheckCircle, AlertTriangle,
   HelpCircle, Edit
 } from 'lucide-react';
-import { 
+import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer,
   PieChart, Pie, Cell, Label,
   AreaChart, Area, LineChart, Line, Legend
@@ -28,7 +28,9 @@ function LogoutModal({ onConfirm, onCancel }) {
           <button className="btn-logout-cancel" onClick={onCancel}>
             Cancel
           </button>
-          <button className="btn-logout-confirm" onClick={onConfirm}>
+          <button className="btn-logout-confirm" onClick={() => {
+            onConfirm();
+          }}>
             Confirm Logout
           </button>
         </div>
@@ -37,7 +39,7 @@ function LogoutModal({ onConfirm, onCancel }) {
   );
 }
 
-function Sidebar({ activeModule, setActiveModule }) {
+function Sidebar({ activeModule, setActiveModule, onLogout }) {
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
   const icons = [
     { id: 1, icon: <LayoutDashboard size={20} /> },
@@ -64,8 +66,8 @@ function Sidebar({ activeModule, setActiveModule }) {
     <>
       <aside className="sidebar">
         {icons.map((item) => (
-          <div 
-            key={item.id} 
+          <div
+            key={item.id}
             className={`sidebar-icon ${activeModule === item.id ? 'active' : ''}`}
             onClick={() => handleIconClick(item.id)}
           >
@@ -73,84 +75,126 @@ function Sidebar({ activeModule, setActiveModule }) {
           </div>
         ))}
       </aside>
-      
+
       {isLogoutModalOpen && (
-        <LogoutModal 
-          onCancel={() => setIsLogoutModalOpen(false)} 
+        <LogoutModal
+          onCancel={() => setIsLogoutModalOpen(false)}
           onConfirm={() => {
             console.log("Logout confirmed");
             setIsLogoutModalOpen(false);
-          }} 
+            onLogout();
+          }}
         />
       )}
     </>
   );
 }
 
-function SetupEmailModal({ onClose }) {
+function SetupEmailModal({ onClose, config, onSave }) {
+  const [email, setEmail] = useState(config?.email || '');
+  const [smtpHost, setSmtpHost] = useState(config?.smtpHost || '');
+  const [appPassword, setAppPassword] = useState(config?.appPassword || '');
+  const [smtpPort, setSmtpPort] = useState(config?.smtpPort || '587');
+  const [fromEmail, setFromEmail] = useState(config?.fromEmail || '');
+
+  const handleSave = () => {
+    onSave({ email, smtpHost, appPassword, smtpPort, fromEmail });
+    onClose();
+  };
+
   return (
     <div className="modal-overlay">
       <div className="modal-content setup-email-modal">
-        <div className="modal-header" style={{borderBottom: 'none', paddingBottom: '0.5rem', backgroundColor: 'white'}}>
-          <div style={{display: 'flex', flexDirection: 'column'}}>
+        <div className="modal-header" style={{ borderBottom: 'none', paddingBottom: '0.5rem', backgroundColor: 'white' }}>
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
             <h2>Setup Email Configuration</h2>
-            <p style={{fontSize: '0.875rem', color: '#64748b', margin: '0.25rem 0 0 0'}}>Configure SMTP settings to send invoices and notifications</p>
+            <p style={{ fontSize: '0.875rem', color: '#64748b', margin: '0.25rem 0 0 0' }}>Configure SMTP settings to send invoices and notifications</p>
           </div>
           <button className="btn-close" onClick={onClose}><X size={18} /></button>
         </div>
-        
+
         <div className="email-tabs">
           <div className="email-tab">
-            <FileText size={14} style={{marginRight:'0.35rem'}}/> 2FA Instructions
+            <FileText size={14} style={{ marginRight: '0.35rem' }} /> 2FA Instructions
           </div>
           <div className="email-tab active">
-            <Edit size={14} style={{marginRight:'0.35rem'}}/> Configuration
+            <Edit size={14} style={{ marginRight: '0.35rem' }} /> Configuration
           </div>
         </div>
 
         <div className="modal-body setup-email-body">
           <div className="email-hint-banner">
-            <div className="hint-icon-box" style={{alignSelf: 'flex-start', marginTop: '2px'}}><AlertTriangle size={14} style={{transform: 'rotate(180deg)', color: '#3b82f6'}} /></div>
+            <div className="hint-icon-box" style={{ alignSelf: 'flex-start', marginTop: '2px' }}><AlertTriangle size={14} style={{ transform: 'rotate(180deg)', color: '#3b82f6' }} /></div>
             <div className="hint-text">
-              <span style={{fontWeight: 600}}>Tip:</span> Most fields auto-fill based on your email. Need help? Switch to the Instructions tab.
+              <span style={{ fontWeight: 600 }}>Tip:</span> Most fields auto-fill based on your email. Need help? Switch to the Instructions tab.
             </div>
           </div>
 
-          <div className="grid-2-col" style={{marginBottom: '1.25rem'}}>
+          <div className="grid-2-col" style={{ marginBottom: '1.25rem' }}>
             <div className="form-group">
               <label className="form-label">Email Address *</label>
-              <input type="email" className="form-input" placeholder="your-email@gmail.com" />
+              <input
+                type="email"
+                className="form-input"
+                placeholder="your-email@gmail.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
               <div className="field-hint">This will auto-fill other fields</div>
             </div>
             <div className="form-group">
               <label className="form-label">SMTP Host</label>
-              <input type="text" className="form-input" placeholder="smtp.gmail.com" />
+              <input
+                type="text"
+                className="form-input"
+                placeholder="smtp.gmail.com"
+                value={smtpHost}
+                onChange={(e) => setSmtpHost(e.target.value)}
+              />
               <div className="field-hint">Auto-filled based on email</div>
             </div>
           </div>
 
-          <div className="grid-2-col" style={{marginBottom: '1.25rem'}}>
+          <div className="grid-2-col" style={{ marginBottom: '1.25rem' }}>
             <div className="form-group">
-              <label className="form-label" style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
+              <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span>App Password *</span>
               </label>
               <div className="input-with-icon">
-                <input type="text" className="form-input" placeholder="16-character app password" />
+                <input
+                  type="password"
+                  className="form-input"
+                  placeholder="16-character app password"
+                  value={appPassword}
+                  onChange={(e) => setAppPassword(e.target.value)}
+                />
                 <div className="icon-right"><HelpCircle size={14} /></div>
               </div>
               <div className="field-hint">From 2FA settings, not regular password</div>
             </div>
             <div className="form-group">
               <label className="form-label">SMTP Port</label>
-              <input type="text" className="form-input" placeholder="587" />
+              <input
+                type="text"
+                className="form-input"
+                placeholder="587"
+                value={smtpPort}
+                onChange={(e) => setSmtpPort(e.target.value)}
+              />
               <div className="field-hint">Usually 587 (TLS) or 465 (SSL)</div>
             </div>
           </div>
 
-          <div className="grid-2-col" style={{marginBottom: '0.5rem', alignItems: 'flex-start'}}>
+          <div className="grid-2-col" style={{ marginBottom: '0.5rem', alignItems: 'flex-start' }}>
             <div className="form-group">
               <label className="form-label">From Email *</label>
-              <input type="text" className="form-input" placeholder="sender@yourcompany.com" />
+              <input
+                type="text"
+                className="form-input"
+                placeholder="sender@yourcompany.com"
+                value={fromEmail}
+                onChange={(e) => setFromEmail(e.target.value)}
+              />
               <div className="field-hint">Shows as sender in emails</div>
             </div>
             <div className="form-group">
@@ -174,7 +218,7 @@ function SetupEmailModal({ onClose }) {
           <div className="footer-note">* Required fields. Host/Port are optional.</div>
           <div className="footer-actions">
             <button className="btn-cancel-dark" onClick={onClose}>Cancel</button>
-            <button className="btn-save-email"><Mail size={14} style={{marginRight:'0.35rem'}}/> Save</button>
+            <button className="btn-save-email" onClick={handleSave}><Mail size={14} style={{ marginRight: '0.35rem' }} /> Save</button>
           </div>
         </div>
       </div>
@@ -182,7 +226,173 @@ function SetupEmailModal({ onClose }) {
   );
 }
 
-function Topbar() {
+function CreateVendorModal({ onClose, onAddVendor }) {
+  const [name, setName] = useState('');
+  const [contact, setContact] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [limit, setLimit] = useState('');
+  const [status, setStatus] = useState('Active');
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (name && email) {
+      onAddVendor({
+        id: Math.floor(Math.random() * 1000).toString(),
+        name,
+        contact,
+        email,
+        phone,
+        status,
+        limit: limit || 'Not Set'
+      });
+      onClose();
+    }
+  };
+
+  return (
+    <div className="modal-overlay">
+      <div className="modal-content invoice-modal" style={{ maxWidth: '600px' }}>
+        <div className="modal-header">
+          <h2>Create New Vendor</h2>
+          <button className="btn-close" onClick={onClose}><X size={18} /></button>
+        </div>
+        <form onSubmit={handleSubmit}>
+          <div className="modal-body">
+            <div className="form-section">
+              <div className="grid-2-col" style={{ marginBottom: '1rem' }}>
+                <div className="form-group">
+                  <label className="form-label">Vendor Name *</label>
+                  <input type="text" className="form-input" value={name} onChange={(e) => setName(e.target.value)} required />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Contact Person</label>
+                  <input type="text" className="form-input" value={contact} onChange={(e) => setContact(e.target.value)} />
+                </div>
+              </div>
+              <div className="grid-2-col" style={{ marginBottom: '1rem' }}>
+                <div className="form-group">
+                  <label className="form-label">Email Address *</label>
+                  <input type="email" className="form-input" value={email} onChange={(e) => setEmail(e.target.value)} required />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Phone Number</label>
+                  <input type="text" className="form-input" value={phone} onChange={(e) => setPhone(e.target.value)} />
+                </div>
+              </div>
+              <div className="grid-2-col">
+                <div className="form-group">
+                  <label className="form-label">PO Limit</label>
+                  <input type="text" className="form-input" placeholder="e.g. ₹50,000" value={limit} onChange={(e) => setLimit(e.target.value)} />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Status</label>
+                  <select className="form-input" value={status} onChange={(e) => setStatus(e.target.value)}>
+                    <option value="Active">Active</option>
+                    <option value="Pending">Pending</option>
+                    <option value="Inactive">Inactive</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="modal-footer" style={{ borderTop: '1px solid #e2e8f0', padding: '1.25rem 1.5rem', display: 'flex', justifyContent: 'flex-end', gap: '1rem', backgroundColor: '#f8fafc' }}>
+            <button type="button" className="btn-cancel" onClick={onClose}>Cancel</button>
+            <button type="submit" className="btn-submit" style={{ backgroundColor: '#2563eb', color: 'white', padding: '0.5rem 1.25rem', borderRadius: '0.375rem', fontWeight: 600, border: 'none', cursor: 'pointer' }}>Create Vendor</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+function CreatePurchaseOrderModal({ onClose, onAddPO, vendors }) {
+  const [poNumber, setPoNumber] = useState(`PO-${Math.floor(1000 + Math.random() * 9000)}`);
+  const [vendorId, setVendorId] = useState('');
+  const [poDate, setPoDate] = useState(new Date().toISOString().split('T')[0]);
+  const [deliveryDate, setDeliveryDate] = useState('');
+  const [total, setTotal] = useState('');
+  const [status, setStatus] = useState('Pending');
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const selectedVendor = vendors.find(v => v.id === vendorId);
+    if (vendorId && total) {
+      onAddPO({
+        id: poNumber,
+        vendor: selectedVendor?.name || 'Unknown',
+        date: poDate,
+        delivery: deliveryDate || 'TBD',
+        status,
+        total: `₹${parseFloat(total).toLocaleString()}`
+      });
+      onClose();
+    }
+  };
+
+  return (
+    <div className="modal-overlay">
+      <div className="modal-content invoice-modal" style={{ maxWidth: '600px' }}>
+        <div className="modal-header">
+          <h2>New Purchase Order</h2>
+          <button className="btn-close" onClick={onClose}><X size={18} /></button>
+        </div>
+        <form onSubmit={handleSubmit}>
+          <div className="modal-body">
+            <div className="form-section">
+              <div className="grid-2-col" style={{ marginBottom: '1rem' }}>
+                <div className="form-group">
+                  <label className="form-label">PO Number *</label>
+                  <input type="text" className="form-input" value={poNumber} onChange={(e) => setPoNumber(e.target.value)} required />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Select Vendor *</label>
+                  <select className="form-input" value={vendorId} onChange={(e) => setVendorId(e.target.value)} required>
+                    <option value="">Choose a vendor</option>
+                    {vendors.map(v => (
+                      <option key={v.id} value={v.id}>{v.name}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <div className="grid-2-col" style={{ marginBottom: '1rem' }}>
+                <div className="form-group">
+                  <label className="form-label">PO Date *</label>
+                  <input type="date" className="form-input" value={poDate} onChange={(e) => setPoDate(e.target.value)} required />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Expected Delivery</label>
+                  <input type="date" className="form-input" value={deliveryDate} onChange={(e) => setDeliveryDate(e.target.value)} />
+                </div>
+              </div>
+              <div className="grid-2-col">
+                <div className="form-group">
+                  <label className="form-label">Total Amount (₹) *</label>
+                  <input type="number" className="form-input" placeholder="0.00" value={total} onChange={(e) => setTotal(e.target.value)} required />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Status</label>
+                  <select className="form-input" value={status} onChange={(e) => setStatus(e.target.value)}>
+                    <option value="Pending">Pending</option>
+                    <option value="Approved">Approved</option>
+                    <option value="Shipped">Shipped</option>
+                    <option value="Completed">Completed</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="modal-footer" style={{ borderTop: '1px solid #e2e8f0', padding: '1.25rem 1.5rem', display: 'flex', justifyContent: 'flex-end', gap: '1rem', backgroundColor: '#f8fafc' }}>
+            <button type="button" className="btn-cancel" onClick={onClose}>Cancel</button>
+            <button type="submit" className="btn-submit" style={{ backgroundColor: '#2563eb', color: 'white', padding: '0.5rem 1.25rem', borderRadius: '0.375rem', fontWeight: 600, border: 'none', cursor: 'pointer' }}>Generate PO</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+function Topbar({ user, emailConfig, onSaveEmailConfig }) {
   const [isSetupEmailOpen, setIsSetupEmailOpen] = useState(false);
 
   return (
@@ -191,25 +401,35 @@ function Topbar() {
         <div className="logo-container">
           <div className="logo-icon">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
             </svg>
           </div>
           Shnoor
-          <span style={{color: '#64748b', fontSize: '0.75rem', fontWeight: 500, alignSelf:'flex-end', marginBottom:'2px'}}>Invoicing Platform</span>
+          <span style={{ color: '#64748b', fontSize: '0.75rem', fontWeight: 500, alignSelf: 'flex-end', marginBottom: '2px' }}>Invoicing Platform</span>
         </div>
         <Menu size={20} style={{ color: '#64748b', marginLeft: '1rem', cursor: 'pointer' }} />
       </div>
 
       <div className="topbar-right">
-        <button className="btn-primary" style={{backgroundColor: '#2563eb'}} onClick={() => setIsSetupEmailOpen(true)}>
-          <Mail size={16} /> Setup Email
+        <button
+          className="btn-primary"
+          style={{ backgroundColor: emailConfig?.email ? '#10b981' : '#2563eb' }}
+          onClick={() => setIsSetupEmailOpen(true)}
+        >
+          <Mail size={16} /> {emailConfig?.email ? 'Email Configured' : 'Setup Email'}
         </button>
         <div className="user-profile">
-          <div className="avatar">L</div>
-          Lakshman babu Janjanam
+          <div className="avatar">{user.email ? user.email.charAt(0).toUpperCase() : 'U'}</div>
+          {user.email}
         </div>
       </div>
-      {isSetupEmailOpen && <SetupEmailModal onClose={() => setIsSetupEmailOpen(false)} />}
+      {isSetupEmailOpen && (
+        <SetupEmailModal
+          onClose={() => setIsSetupEmailOpen(false)}
+          config={emailConfig}
+          onSave={onSaveEmailConfig}
+        />
+      )}
     </header>
   );
 }
@@ -237,8 +457,8 @@ function ProductsOverviewTab() {
 
         <div className="metric-card purple">
           <div className="metric-label">Avg. Product Price</div>
-          <div style={{fontSize:'1.75rem', fontWeight: '700', color: '#8b5cf6'}}>₹15,000</div>
-          <div style={{fontSize:'0.75rem', color: '#8b5cf6'}}>Range: ₹15,000 - ₹15,000</div>
+          <div style={{ fontSize: '1.75rem', fontWeight: '700', color: '#8b5cf6' }}>₹15,000</div>
+          <div style={{ fontSize: '0.75rem', color: '#8b5cf6' }}>Range: ₹15,000 - ₹15,000</div>
         </div>
       </div>
 
@@ -249,8 +469,8 @@ function ProductsOverviewTab() {
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={priceData} margin={{ top: 10, right: 30, left: 0, bottom: 20 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                <XAxis dataKey="name" tick={{fontSize: 12, fill: '#64748b'}} tickLine={false} axisLine={{stroke: '#e2e8f0'}} />
-                <YAxis tick={{fontSize: 12, fill: '#64748b'}} tickLine={false} axisLine={false} domain={[0, 1]} tickCount={5} />
+                <XAxis dataKey="name" tick={{ fontSize: 12, fill: '#64748b' }} tickLine={false} axisLine={{ stroke: '#e2e8f0' }} />
+                <YAxis tick={{ fontSize: 12, fill: '#64748b' }} tickLine={false} axisLine={false} domain={[0, 1]} tickCount={5} />
                 <Bar dataKey="value" fill="#8b5cf6" radius={[4, 4, 0, 0]} maxBarSize={300} />
               </BarChart>
             </ResponsiveContainer>
@@ -409,13 +629,13 @@ function InvoiceTimeSeriesTab() {
               <AreaChart data={countsData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#818cf8" stopOpacity={0.4}/>
-                    <stop offset="95%" stopColor="#818cf8" stopOpacity={0.0}/>
+                    <stop offset="5%" stopColor="#818cf8" stopOpacity={0.4} />
+                    <stop offset="95%" stopColor="#818cf8" stopOpacity={0.0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" vertical={true} horizontal={true} stroke="#e2e8f0" />
-                <XAxis dataKey="name" tick={{fontSize: 12, fill: '#64748b'}} tickLine={false} axisLine={{stroke: '#e2e8f0'}} />
-                <YAxis tick={{fontSize: 12, fill: '#64748b'}} tickLine={false} axisLine={false} domain={[0, 16]} tickCount={5} />
+                <XAxis dataKey="name" tick={{ fontSize: 12, fill: '#64748b' }} tickLine={false} axisLine={{ stroke: '#e2e8f0' }} />
+                <YAxis tick={{ fontSize: 12, fill: '#64748b' }} tickLine={false} axisLine={false} domain={[0, 16]} tickCount={5} />
                 <Area type="monotone" dataKey="count" stroke="#818cf8" fillOpacity={1} fill="url(#colorCount)" strokeWidth={2} />
               </AreaChart>
             </ResponsiveContainer>
@@ -428,18 +648,18 @@ function InvoiceTimeSeriesTab() {
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={analysisData} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={true} horizontal={true} stroke="#e2e8f0" />
-                <XAxis dataKey="name" tick={{fontSize: 12, fill: '#64748b'}} tickLine={false} axisLine={{stroke: '#e2e8f0'}} />
-                <YAxis 
-                  tick={{fontSize: 12, fill: '#64748b'}} 
-                  tickLine={false} 
-                  axisLine={false} 
-                  domain={[0, 80000]} 
+                <XAxis dataKey="name" tick={{ fontSize: 12, fill: '#64748b' }} tickLine={false} axisLine={{ stroke: '#e2e8f0' }} />
+                <YAxis
+                  tick={{ fontSize: 12, fill: '#64748b' }}
+                  tickLine={false}
+                  axisLine={false}
+                  domain={[0, 80000]}
                   tickCount={5}
                   tickFormatter={(value) => `₹${value.toLocaleString()}`}
                 />
-                <Legend iconType="circle" wrapperStyle={{fontSize: '12px', color: '#64748b', paddingTop: '10px'}} />
-                <Line type="monotone" dataKey="paid" name="Paid Revenue" stroke="#10b981" strokeWidth={2} dot={{r: 4, fill: 'white', strokeWidth: 2}} activeDot={{r: 6}} />
-                <Line type="monotone" dataKey="pending" name="Pending Amount" stroke="#f97316" strokeDasharray="5 5" strokeWidth={2} dot={{r: 4, fill: 'white', strokeWidth: 2}} activeDot={{r: 6}} />
+                <Legend iconType="circle" wrapperStyle={{ fontSize: '12px', color: '#64748b', paddingTop: '10px' }} />
+                <Line type="monotone" dataKey="paid" name="Paid Revenue" stroke="#10b981" strokeWidth={2} dot={{ r: 4, fill: 'white', strokeWidth: 2 }} activeDot={{ r: 6 }} />
+                <Line type="monotone" dataKey="pending" name="Pending Amount" stroke="#f97316" strokeDasharray="5 5" strokeWidth={2} dot={{ r: 4, fill: 'white', strokeWidth: 2 }} activeDot={{ r: 6 }} />
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -466,21 +686,21 @@ function ProductsPerformanceTab() {
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={revenueData} layout="vertical" margin={{ top: 10, right: 30, left: 30, bottom: 20 }}>
               <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e2e8f0" />
-              <XAxis 
-                type="number" 
-                tick={{fontSize: 12, fill: '#64748b'}} 
-                tickLine={false} 
-                axisLine={{stroke: '#e2e8f0'}} 
-                tickFormatter={(val) => `₹${val.toLocaleString()}`} 
-                domain={[0, 16000]} 
-                tickCount={5} 
+              <XAxis
+                type="number"
+                tick={{ fontSize: 12, fill: '#64748b' }}
+                tickLine={false}
+                axisLine={{ stroke: '#e2e8f0' }}
+                tickFormatter={(val) => `₹${val.toLocaleString()}`}
+                domain={[0, 16000]}
+                tickCount={5}
               />
-              <YAxis 
-                dataKey="name" 
-                type="category" 
-                tick={{fontSize: 12, fill: '#64748b'}} 
-                tickLine={false} 
-                axisLine={false} 
+              <YAxis
+                dataKey="name"
+                type="category"
+                tick={{ fontSize: 12, fill: '#64748b' }}
+                tickLine={false}
+                axisLine={false}
               />
               <Bar dataKey="revenue" fill="#14b8a6" radius={[0, 4, 4, 0]} maxBarSize={150} />
             </BarChart>
@@ -494,18 +714,18 @@ function ProductsPerformanceTab() {
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={quantityData} margin={{ top: 20, right: 30, left: 0, bottom: 60 }}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-              <XAxis 
-                dataKey="name" 
-                tick={{fontSize: 12, fill: '#64748b', angle: -45, textAnchor: 'end'}} 
-                tickLine={false} 
-                axisLine={{stroke: '#e2e8f0'}} 
+              <XAxis
+                dataKey="name"
+                tick={{ fontSize: 12, fill: '#64748b', angle: -45, textAnchor: 'end' }}
+                tickLine={false}
+                axisLine={{ stroke: '#e2e8f0' }}
               />
-              <YAxis 
-                tick={{fontSize: 12, fill: '#64748b'}} 
-                tickLine={false} 
-                axisLine={false} 
-                domain={[0, 1]} 
-                tickCount={5} 
+              <YAxis
+                tick={{ fontSize: 12, fill: '#64748b' }}
+                tickLine={false}
+                axisLine={false}
+                domain={[0, 1]}
+                tickCount={5}
               />
               <Bar dataKey="quantity" fill="#f97316" radius={[4, 4, 0, 0]} maxBarSize={300} />
             </BarChart>
@@ -543,8 +763,8 @@ function DashboardContent() {
 
       <div className="tabs-container">
         {tabs.map((tab, idx) => (
-          <div 
-            key={idx} 
+          <div
+            key={idx}
             className={`tab ${idx === activeTab ? 'active' : ''}`}
             onClick={() => setActiveTab(idx)}
           >
@@ -558,7 +778,7 @@ function DashboardContent() {
       {activeTab === 2 && <InvoiceTimeSeriesTab />}
       {activeTab === 3 && <ProductsPerformanceTab />}
       {activeTab > 3 && (
-        <div className="empty-state" style={{marginTop: '2rem'}}>
+        <div className="empty-state" style={{ marginTop: '2rem' }}>
           Content for {tabs[activeTab]} is not available yet.
         </div>
       )}
@@ -581,15 +801,15 @@ function AddProductModal({ onClose, onAddProduct }) {
           <h2>Add New Product</h2>
           <button className="btn-close" onClick={onClose}><X size={18} /></button>
         </div>
-        
+
         <div className="modal-body">
           <div className="form-section" style={{ marginBottom: 0 }}>
             <div className="form-group" style={{ marginBottom: '1rem' }}>
               <label className="form-label">Product Name *</label>
-              <input 
-                type="text" 
-                className="form-input" 
-                placeholder="e.g. Premium Consulting Service" 
+              <input
+                type="text"
+                className="form-input"
+                placeholder="e.g. Premium Consulting Service"
                 value={productName}
                 onChange={(e) => setProductName(e.target.value)}
               />
@@ -597,9 +817,9 @@ function AddProductModal({ onClose, onAddProduct }) {
 
             <div className="form-group" style={{ marginBottom: '1rem' }}>
               <label className="form-label">Description</label>
-              <textarea 
-                className="form-textarea" 
-                placeholder="Brief description of the product or service" 
+              <textarea
+                className="form-textarea"
+                placeholder="Brief description of the product or service"
                 rows="3"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
@@ -609,7 +829,7 @@ function AddProductModal({ onClose, onAddProduct }) {
             <div className="grid-2-col" style={{ marginBottom: '1rem' }}>
               <div className="form-group">
                 <label className="form-label">GST Rate (%) *</label>
-                <select 
+                <select
                   className="form-input"
                   value={gstRate}
                   onChange={(e) => setGstRate(Number(e.target.value))}
@@ -621,13 +841,13 @@ function AddProductModal({ onClose, onAddProduct }) {
                   <option value={28}>28% GST</option>
                 </select>
               </div>
-              
+
               <div className="form-group">
                 <label className="form-label">Unit Price (₹) *</label>
-                <input 
-                  type="number" 
-                  className="form-input" 
-                  placeholder="0.00" 
+                <input
+                  type="number"
+                  className="form-input"
+                  placeholder="0.00"
                   value={unitPrice}
                   onChange={(e) => setUnitPrice(e.target.value)}
                 />
@@ -656,11 +876,8 @@ function AddProductModal({ onClose, onAddProduct }) {
   );
 }
 
-function ProductsPage() {
+function ProductsPage({ products, onAddProduct, onDeleteProduct }) {
   const [isAddProductModalOpen, setIsAddProductModalOpen] = useState(false);
-  const [products, setProducts] = useState([
-    { id: '1', name: 'Premium Service', desc: 'Standard professional consulting', gst: '18%', price: '₹15,000.00' }
-  ]);
 
   return (
     <main className="dashboard-content products-page">
@@ -692,8 +909,8 @@ function ProductsPage() {
         <table className="data-table">
           <thead>
             <tr>
-              <th style={{width: '40px'}}><input type="checkbox" /></th>
-              <th style={{width: '80px'}}>SR. NO</th>
+              <th style={{ width: '40px' }}><input type="checkbox" /></th>
+              <th style={{ width: '80px' }}>SR. NO</th>
               <th>PRODUCT NAME</th>
               <th>DESCRIPTION</th>
               <th>GST (%)</th>
@@ -706,14 +923,14 @@ function ProductsPage() {
               <tr key={prod.id}>
                 <td><input type="checkbox" /></td>
                 <td>{index + 1}</td>
-                <td style={{fontWeight: 600, color: '#1e293b'}}>{prod.name}</td>
-                <td style={{color: '#64748b'}}>{prod.desc}</td>
+                <td style={{ fontWeight: 600, color: '#1e293b' }}>{prod.name}</td>
+                <td style={{ color: '#64748b' }}>{prod.desc}</td>
                 <td>{prod.gst}</td>
-                <td style={{fontWeight: 600}}>{prod.price}</td>
+                <td style={{ fontWeight: 600 }}>{prod.price}</td>
                 <td>
-                  <div style={{display: 'flex', gap: '0.5rem', justifyContent: 'center'}}>
+                  <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
                     <button className="btn-edit">Edit</button>
-                    <button className="btn-delete" onClick={() => setProducts(products.filter(p => p.id !== prod.id))}>Delete</button>
+                    <button className="btn-delete" onClick={() => onDeleteProduct(prod.id)}>Delete</button>
                   </div>
                 </td>
               </tr>
@@ -731,14 +948,14 @@ function ProductsPage() {
         <div className="pagination-text">{products.length} products</div>
       </div>
 
-      {isAddProductModalOpen && <AddProductModal onClose={() => setIsAddProductModalOpen(false)} onAddProduct={(newProd) => setProducts([...products, newProd])} />}
+      {isAddProductModalOpen && <AddProductModal onClose={() => setIsAddProductModalOpen(false)} onAddProduct={onAddProduct} />}
     </main>
   );
 }
 
 // ------ Invoices Management Page ------
 
-function CreateInvoiceModal({ onClose }) {
+function CreateInvoiceModal({ onClose, onAddInvoice }) {
   // Step 1: Identity & Currency
   const [companyLogo, setCompanyLogo] = useState(null);
   const [signature, setSignature] = useState(null);
@@ -746,6 +963,8 @@ function CreateInvoiceModal({ onClose }) {
 
   // Step 2: Information & Bank Details
   const [address, setAddress] = useState('');
+  const [clientName, setClientName] = useState('');
+  const [clientEmail, setClientEmail] = useState('');
   const [dueDate, setDueDate] = useState('01-05-2026');
   const [paymentMethod, setPaymentMethod] = useState('');
   const [status, setStatus] = useState('Unpaid');
@@ -767,29 +986,81 @@ function CreateInvoiceModal({ onClose }) {
 
   const currencySign = currency === 'INR' ? '₹' : (currency === 'USD' ? '$' : 'ر.ع ');
 
+  const handleSubmit = () => {
+    onAddInvoice({
+      id: Math.floor(1000 + Math.random() * 9000).toString(),
+      clientName: clientName || 'Walk-in Client',
+      email: clientEmail || '-',
+      date: new Date().toLocaleDateString('en-GB'),
+      dueDate: dueDate,
+      status: status,
+      subTotal: `${currencySign}${subTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}`,
+      gstTotal: `${currencySign}${gstAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}`,
+      total: `${currencySign}${totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}`
+    });
+    onClose();
+  };
+
+  const [isRecording, setIsRecording] = useState(false);
+  const handleVoiceFill = () => {
+    setIsRecording(true);
+    setTimeout(() => {
+      setIsRecording(false);
+      setClientName('John Doe');
+      setClientEmail('john@example.com');
+      setProductName('Premium Consulting');
+      setUnitPrice(15000);
+      setGstRate(18);
+    }, 2000);
+  };
+
   return (
     <div className="modal-overlay">
       <div className="modal-content invoice-modal">
         <div className="modal-header">
           <h2>Create Invoice</h2>
           <div className="modal-header-actions">
-            <button className="btn-voice-fill"><Mic size={14} /> Voice Fill</button>
+            <button
+              className={`btn-voice-fill ${isRecording ? 'recording' : ''}`}
+              onClick={handleVoiceFill}
+            >
+              <Mic size={14} /> {isRecording ? 'Listening...' : 'Voice Fill'}
+            </button>
             <button className="btn-refresh"><RefreshCw size={14} /> Refreshing...</button>
             <button className="btn-close" onClick={onClose}><X size={18} /></button>
           </div>
         </div>
-        
+
         <div className="modal-body">
           <div className="voice-fill-hint">
             <div className="hint-title"><Mic size={14} /> Voice Fill — Speak to auto-fill required (*) fields:</div>
             <div className="hint-example">"John john@gmail.com 5 laptops 50000 gst 18 Mumbai"</div>
-            <div className="hint-fields"><span className="fill-dot"></span> Clients: Client Name*, Email* <span className="fill-dot"></span> Product*: Product*, Qty*, Price*, GST* <span className="fill-dot"></span> Manual: Bank Details*, Due Date*</div>
+            <div className="hint-fields">
+              <span className="fill-dot"></span> Clients: Client Name*, Email*
+              <span className="fill-dot"></span> Product*: Product*, Qty*, Price*, GST*
+              <span className="fill-dot"></span> Manual: Bank Details*, Due Date*
+            </div>
+            <div className="hint-instruction" style={{ marginTop: '0.5rem', fontSize: '0.75rem', color: '#64748b', fontStyle: 'italic', borderTop: '1px solid #e2e8f0', paddingTop: '0.5rem' }}>
+              Click the <span style={{ fontWeight: 600, color: '#3b82f6' }}>Voice Fill</span> button to start recording. Our AI will automatically parse your voice input and populate the invoice fields for high-speed creation.
+            </div>
           </div>
 
           <div className="form-section">
+            <div className="section-header">Client & Information</div>
+            <div className="grid-2-col" style={{ marginBottom: '1rem' }}>
+              <div className="form-group">
+                <label className="form-label">Client Name *</label>
+                <input type="text" className="form-input" placeholder="Enter client name" value={clientName} onChange={(e) => setClientName(e.target.value)} />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Client Email *</label>
+                <input type="email" className="form-input" placeholder="client@example.com" value={clientEmail} onChange={(e) => setClientEmail(e.target.value)} />
+              </div>
+            </div>
+            {/* Identity & Currency */}
             <div className="section-header">Identity & Currency</div>
-            
-            <div className="form-group" style={{marginBottom: '1rem'}}>
+
+            <div className="form-group" style={{ marginBottom: '1rem' }}>
               <label className="form-label">Company Logo (Optional)</label>
               <div className="file-upload">
                 <button className="btn-choose">Choose File</button>
@@ -798,7 +1069,7 @@ function CreateInvoiceModal({ onClose }) {
               <div className="field-hint">Only PNG files allowed (max 5MB). Logo will appear on generated invoices.</div>
             </div>
 
-            <div className="form-group" style={{marginBottom: '1rem'}}>
+            <div className="form-group" style={{ marginBottom: '1rem' }}>
               <label className="form-label">Authorized Signature (Optional)</label>
               <div className="file-upload">
                 <button className="btn-choose">Choose File</button>
@@ -822,12 +1093,12 @@ function CreateInvoiceModal({ onClose }) {
 
           <div className="form-section">
             <div className="section-header">Information & Billing</div>
-            
-            <div className="form-group" style={{marginBottom: '1rem'}}>
+
+            <div className="form-group" style={{ marginBottom: '1rem' }}>
               <label className="form-label">Address</label>
-              <textarea 
-                className="form-textarea" 
-                placeholder="Type address or select from suggestions" 
+              <textarea
+                className="form-textarea"
+                placeholder="Type address or select from suggestions"
                 rows="3"
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
@@ -835,7 +1106,7 @@ function CreateInvoiceModal({ onClose }) {
               <div className="field-hint">Start typing for suggestions. Full address of client.</div>
             </div>
 
-            <div className="grid-2-col" style={{marginBottom: '1rem'}}>
+            <div className="grid-2-col" style={{ marginBottom: '1rem' }}>
               <div className="form-group">
                 <label className="form-label">Due Date *</label>
                 <input type="date" className="form-input" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
@@ -851,7 +1122,7 @@ function CreateInvoiceModal({ onClose }) {
               </div>
             </div>
 
-            <div className="form-group" style={{marginBottom: '1rem'}}>
+            <div className="form-group" style={{ marginBottom: '1rem' }}>
               <label className="form-label">Status *</label>
               <select className="form-input" value={status} onChange={(e) => setStatus(e.target.value)}>
                 <option value="Unpaid">Unpaid</option>
@@ -872,7 +1143,7 @@ function CreateInvoiceModal({ onClose }) {
                   <input type="text" className="form-input" placeholder="Type account number..." value={accountNumber} onChange={(e) => setAccountNumber(e.target.value)} />
                 </div>
               </div>
-              <div className="grid-2-col" style={{marginTop: '1rem'}}>
+              <div className="grid-2-col" style={{ marginTop: '1rem' }}>
                 <div className="form-group">
                   <label className="form-label">IFSC Code *</label>
                   <input type="text" className="form-input" value={ifscCode} onChange={(e) => setIfscCode(e.target.value)} />
@@ -889,82 +1160,82 @@ function CreateInvoiceModal({ onClose }) {
 
           <div className="form-section">
             <div className="section-header">Products & Line Items</div>
-              <div className="form-group" style={{marginBottom: '1rem'}}>
-                <label className="form-label">Select Product (Optional)</label>
-                <select className="form-input">
-                  <option>Select existing or enter new</option>
-                  <option>Premium Service</option>
+            <div className="form-group" style={{ marginBottom: '1rem' }}>
+              <label className="form-label">Select Product (Optional)</label>
+              <select className="form-input">
+                <option>Select existing or enter new</option>
+                <option>Premium Service</option>
+              </select>
+            </div>
+
+            <div className="form-group" style={{ marginBottom: '1rem' }}>
+              <label className="form-label">Product Name *</label>
+              <input
+                type="text"
+                className="form-input"
+                placeholder="Enter product name"
+                value={productName}
+                onChange={(e) => setProductName(e.target.value)}
+              />
+            </div>
+
+            <div className="grid-2-col" style={{ marginBottom: '1rem' }}>
+              <div className="form-group">
+                <label className="form-label">Quantity *</label>
+                <input
+                  type="number"
+                  className="form-input"
+                  value={quantity}
+                  onChange={(e) => setQuantity(Number(e.target.value))}
+                />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Unit Price *</label>
+                <input
+                  type="number"
+                  className="form-input"
+                  value={unitPrice}
+                  onChange={(e) => setUnitPrice(Number(e.target.value))}
+                />
+              </div>
+            </div>
+
+            <div className="grid-2-col" style={{ marginBottom: '1rem' }}>
+              <div className="form-group">
+                <label className="form-label">GST Rate *</label>
+                <select
+                  className="form-input"
+                  value={gstRate}
+                  onChange={(e) => setGstRate(Number(e.target.value))}
+                >
+                  <option value="0">0% GST</option>
+                  <option value="5">5% GST</option>
+                  <option value="12">12% GST</option>
+                  <option value="18">18% GST</option>
+                  <option value="28">28% GST</option>
                 </select>
               </div>
-
-              <div className="form-group" style={{marginBottom: '1rem'}}>
-                <label className="form-label">Product Name *</label>
-                <input 
-                  type="text" 
-                  className="form-input" 
-                  placeholder="Enter product name" 
-                  value={productName}
-                  onChange={(e) => setProductName(e.target.value)}
-                />
-              </div>
-
-              <div className="grid-2-col" style={{marginBottom: '1rem'}}>
-                <div className="form-group">
-                  <label className="form-label">Quantity *</label>
-                  <input 
-                    type="number" 
-                    className="form-input" 
-                    value={quantity}
-                    onChange={(e) => setQuantity(Number(e.target.value))}
-                  />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">Unit Price *</label>
-                  <input 
-                    type="number" 
-                    className="form-input" 
-                    value={unitPrice}
-                    onChange={(e) => setUnitPrice(Number(e.target.value))}
-                  />
-                </div>
-              </div>
-
-              <div className="grid-2-col" style={{marginBottom: '1rem'}}>
-                <div className="form-group">
-                  <label className="form-label">GST Rate *</label>
-                  <select 
-                    className="form-input"
-                    value={gstRate}
-                    onChange={(e) => setGstRate(Number(e.target.value))}
-                  >
-                    <option value="0">0% GST</option>
-                    <option value="5">5% GST</option>
-                    <option value="12">12% GST</option>
-                    <option value="18">18% GST</option>
-                    <option value="28">28% GST</option>
-                  </select>
-                </div>
-                <div className="form-group">
-                  <label className="form-label">Line Total</label>
-                  <input 
-                    type="text" 
-                    className="form-input" 
-                    readOnly 
-                    value={`${currencySign}${totalAmount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`} 
-                  />
-                </div>
-              </div>
-
               <div className="form-group">
-                <label className="form-label">Description (Optional)</label>
-                <textarea 
-                  className="form-textarea" 
-                  placeholder="Enter product description" 
-                  rows="3"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
+                <label className="form-label">Line Total</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  readOnly
+                  value={`${currencySign}${totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
                 />
               </div>
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Description (Optional)</label>
+              <textarea
+                className="form-textarea"
+                placeholder="Enter product description"
+                rows="3"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+              />
+            </div>
           </div>
 
           <div className="invoice-summary-section">
@@ -972,15 +1243,15 @@ function CreateInvoiceModal({ onClose }) {
             <div className="summary-list">
               <div className="summary-item">
                 <span>Subtotal</span>
-                <span>{currencySign}{subTotal.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
+                <span>{currencySign}{subTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
               </div>
               <div className="summary-item">
                 <span>GST ({gstRate}%)</span>
-                <span>{currencySign}{gstAmount.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
+                <span>{currencySign}{gstAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
               </div>
               <div className="summary-item grand-total">
                 <span>Total Amount</span>
-                <span>{currencySign}{totalAmount.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
+                <span>{currencySign}{totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
               </div>
             </div>
           </div>
@@ -988,7 +1259,7 @@ function CreateInvoiceModal({ onClose }) {
 
         <div className="modal-footer">
           <button className="btn-cancel" onClick={onClose}>Cancel</button>
-          <button className="btn-submit" onClick={() => console.log('Create Invoice')}>
+          <button className="btn-submit" onClick={handleSubmit}>
             Create Invoice ({currency})
           </button>
         </div>
@@ -997,21 +1268,23 @@ function CreateInvoiceModal({ onClose }) {
   );
 }
 
-function InvoicesPage() {
+function InvoicesPage({ invoices, onAddInvoice, onDeleteInvoice }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
-
-  const mockInvoices = [
-    { id: '1518', client: 'test', email: 'lakshman@shnoor.com', issue: '26 Feb 2026', due: '28 Mar 2026', sub: '₹15,000.00', gst: '₹2,700.00', total: '₹17,700.00', curr: '₹ INR', status: 'Overdue' },
-    { id: '472', client: 'Client 7', email: 'customer24@example.com', issue: '16 Dec 2025', due: '15 Jan 2026', sub: '₹6,527.12', gst: '₹1,386.36', total: '₹7,702.00', curr: '₹ INR', status: 'Overdue' },
-    { id: '471', client: 'Client 1', email: 'customer23@example.com', issue: '26 Dec 2025', due: '25 Jan 2026', sub: '₹11,660.17', gst: '₹2,476.62', total: '₹13,759.00', curr: '₹ INR', status: 'Paid' },
-    { id: '470', client: 'Client 5', email: 'customer22@example.com', issue: '17 Jan 2026', due: '16 Feb 2026', sub: '₹2,222.03', gst: '₹471.96', total: '₹2,622.00', curr: '₹ INR', status: 'Paid' },
-    { id: '469', client: 'Client 9', email: 'customer21@example.com', issue: '3 Feb 2026', due: '5 Mar 2026', sub: '₹3,610.17', gst: '₹766.80', total: '₹4,260.00', curr: '₹ INR', status: 'Overdue' },
-  ];
 
   return (
     <main className="dashboard-content products-page">
-      <div className="products-toolbar" style={{justifyContent: 'space-between', marginTop: '1rem'}}>
-        <div className="search-container" style={{maxWidth: '400px', flex: 'none'}}>
+      <div className="products-header">
+        <div className="header-text">
+          <h1>Invoices Management</h1>
+          <p className="subtitle">Track, manage and generate professional invoices for your clients</p>
+        </div>
+        <div className="total-products-badge">
+          <div className="label">Total Invoices</div>
+          <div className="value">{invoices.length}</div>
+        </div>
+      </div>
+      <div className="products-toolbar" style={{ justifyContent: 'space-between', marginTop: '1rem' }}>
+        <div className="search-container" style={{ maxWidth: '400px', flex: 'none' }}>
           <Search size={18} className="search-icon" />
           <input type="text" className="search-input" placeholder="Search by email or company..." />
         </div>
@@ -1036,53 +1309,50 @@ function InvoicesPage() {
               <th>DUE DATE</th>
               <th>SUB TOTAL</th>
               <th>GST TOTAL</th>
-              <th style={{textAlign: 'right'}}>TOTAL AMOUNT</th>
-              <th>CURRENCY</th>
+              <th style={{ textAlign: 'right' }}>TOTAL AMOUNT</th>
               <th>STATUS</th>
-              <th>PAYMENT METHOD</th>
-              <th style={{textAlign: 'center', width: '220px'}}>ACTIONS</th>
+              <th style={{ textAlign: 'center', width: '220px' }}>ACTIONS</th>
             </tr>
           </thead>
           <tbody>
-            {mockInvoices.map((inv) => (
+            {invoices.length > 0 ? invoices.map((inv) => (
               <tr key={inv.id}>
                 <td><input type="checkbox" /></td>
-                <td>{inv.id}</td>
-                <td style={{fontWeight: 600, color: '#1e293b'}}>{inv.client}</td>
-                <td style={{color: '#3b82f6'}}>{inv.email}</td>
-                <td style={{color: '#64748b'}}>{inv.issue}</td>
-                <td style={{color: '#64748b'}}>{inv.due}</td>
-                <td style={{fontWeight: 600}}>{inv.sub}</td>
-                <td style={{fontWeight: 600}}>{inv.gst}</td>
-                <td style={{fontWeight: 600, textAlign: 'right'}}>{inv.total}</td>
-                <td>{inv.curr}</td>
+                <td>#INV-{inv.id}</td>
+                <td style={{ fontWeight: 600, color: '#1e293b' }}>{inv.clientName}</td>
+                <td style={{ color: '#3b82f6' }}>{inv.email}</td>
+                <td style={{ color: '#64748b' }}>{inv.date}</td>
+                <td style={{ color: '#64748b' }}>{inv.dueDate}</td>
+                <td style={{ fontWeight: 600 }}>{inv.subTotal || inv.total}</td>
+                <td style={{ fontWeight: 600 }}>{inv.gstTotal || '₹0.00'}</td>
+                <td style={{ fontWeight: 600, textAlign: 'right' }}>{inv.total}</td>
                 <td>
                   <span className={`status-badge ${inv.status.toLowerCase()}`}>{inv.status}</span>
                 </td>
-                <td style={{color: '#94a3b8', fontSize: '0.75rem'}}>N/A</td>
                 <td>
                   <div className="invoice-actions">
                     <button className="action-btn view">View</button>
-                    <button className="action-btn edit">Edit</button>
-                    <button className="action-btn send">Send</button>
-                    <button className="action-btn delete">Delete</button>
-                    <button className="action-btn download">Download</button>
-                    <button className="action-btn hide">Hide</button>
-                    <button className="action-btn log">Log</button>
-                    <button className="action-btn lock">Lock</button>
+                    <button className="action-btn delete" onClick={() => onDeleteInvoice(inv.id)}>Delete</button>
                   </div>
                 </td>
               </tr>
-            ))}
+            )) : (
+              <tr>
+                <td colSpan="11" style={{ padding: '5rem 0', textAlign: 'center', backgroundColor: '#fff' }}>
+                  <div style={{ color: '#94a3b8', fontSize: '0.875rem' }}>No invoices yet</div>
+                  <div style={{ color: '#cbd5e1', fontSize: '0.75rem', marginTop: '0.5rem' }}>Create your first invoice to see it here</div>
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
 
-      <div className="pagination-container" style={{paddingTop: '1rem'}}>
-         <div className="pagination-text" style={{marginRight: 'auto', marginLeft: '1rem'}}>Showing 1 to 5 of 26 results</div>
+      <div className="pagination-container" style={{ paddingTop: '1rem' }}>
+        <div className="pagination-text" style={{ marginRight: 'auto', marginLeft: '1rem' }}>Showing 1 to {invoices.length} of {invoices.length} results</div>
       </div>
 
-      {isModalOpen && <CreateInvoiceModal onClose={() => setIsModalOpen(false)} />}
+      {isModalOpen && <CreateInvoiceModal onClose={() => setIsModalOpen(false)} onAddInvoice={onAddInvoice} />}
     </main>
   );
 }
@@ -1102,12 +1372,12 @@ function CreateExpenseModal({ onClose, onAddExpense }) {
           <h2>Create New Expense</h2>
           <button className="btn-close" onClick={onClose}><X size={18} /></button>
         </div>
-        
+
         <div className="modal-body">
           <div className="form-section" style={{ marginBottom: 0 }}>
             <div className="form-group" style={{ marginBottom: '1rem' }}>
               <label className="form-label">Category *</label>
-              <select 
+              <select
                 className="form-input"
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
@@ -1123,9 +1393,9 @@ function CreateExpenseModal({ onClose, onAddExpense }) {
 
             <div className="form-group" style={{ marginBottom: '1rem' }}>
               <label className="form-label">Description</label>
-              <textarea 
-                className="form-textarea" 
-                placeholder="Details about the expense" 
+              <textarea
+                className="form-textarea"
+                placeholder="Details about the expense"
                 rows="3"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
@@ -1135,20 +1405,20 @@ function CreateExpenseModal({ onClose, onAddExpense }) {
             <div className="grid-2-col" style={{ marginBottom: '1rem' }}>
               <div className="form-group">
                 <label className="form-label">Amount (₹) *</label>
-                <input 
-                  type="number" 
-                  className="form-input" 
-                  placeholder="0.00" 
+                <input
+                  type="number"
+                  className="form-input"
+                  placeholder="0.00"
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
                 />
               </div>
-              
+
               <div className="form-group">
                 <label className="form-label">Date *</label>
-                <input 
-                  type="date" 
-                  className="form-input" 
+                <input
+                  type="date"
+                  className="form-input"
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
                 />
@@ -1177,25 +1447,8 @@ function CreateExpenseModal({ onClose, onAddExpense }) {
   );
 }
 
-function ExpensesPage() {
+function ExpensesPage({ expenses, onAddExpense, onDeleteExpense }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [expenses, setExpenses] = useState([
-    { id: '309', category: 'Travel', desc: 'Monthly business expense 15', amount: '₹546.00', date: '10 Dec 2025' },
-    { id: '308', category: 'Marketing', desc: 'Monthly business expense 14', amount: '₹2,185.00', date: '7 Jan 2026' },
-    { id: '307', category: 'Internet', desc: 'Monthly business expense 13', amount: '₹1,137.00', date: '1 Feb 2026' },
-    { id: '306', category: 'Software License', desc: 'Monthly business expense 12', amount: '₹4,125.00', date: '19 Jan 2026' },
-    { id: '305', category: 'Marketing', desc: 'Monthly business expense 11', amount: '₹3,725.00', date: '26 Jan 2026' },
-    { id: '304', category: 'Office Rent', desc: 'Monthly business expense 10', amount: '₹11,262.00', date: '21 Dec 2025' },
-    { id: '303', category: 'Cloud Services', desc: 'Monthly business expense 9', amount: '₹5,139.00', date: '20 Dec 2025' },
-  ]);
-
-  const handleAddExpense = (newExpense) => {
-    setExpenses([newExpense, ...expenses]);
-  };
-
-  const handleDeleteExpense = (id) => {
-    setExpenses(expenses.filter(exp => exp.id !== id));
-  };
 
   const getCategoryClass = (cat) => {
     const map = {
@@ -1218,7 +1471,7 @@ function ExpensesPage() {
         </div>
         <div className="total-products-badge">
           <div className="label">TOTAL EXPENSES</div>
-          <div className="value">15</div>
+          <div className="value">{expenses.length}</div>
         </div>
       </div>
 
@@ -1240,46 +1493,53 @@ function ExpensesPage() {
           <thead>
             <tr>
               <th><input type="checkbox" /></th>
-              <th>ID</th>
+              <th>EXPENSE ID</th>
               <th>CATEGORY</th>
               <th>DESCRIPTION</th>
               <th>AMOUNT</th>
               <th>DATE</th>
-              <th style={{textAlign: 'center'}}>ACTIONS</th>
+              <th style={{ textAlign: 'center' }}>ACTIONS</th>
             </tr>
           </thead>
           <tbody>
-            {expenses.map((exp) => (
+            {expenses.length > 0 ? expenses.map((exp) => (
               <tr key={exp.id}>
                 <td><input type="checkbox" /></td>
-                <td style={{fontWeight: 700}}>{exp.id}</td>
+                <td style={{ fontWeight: 700 }}>{exp.id}</td>
                 <td><span className={`status-badge ${getCategoryClass(exp.category)}`}>{exp.category}</span></td>
-                <td style={{color: '#64748b'}}>{exp.desc}</td>
-                <td style={{fontWeight: 700}}>{exp.amount}</td>
-                <td style={{color: '#64748b'}}>{exp.date}</td>
+                <td style={{ color: '#64748b' }}>{exp.desc}</td>
+                <td style={{ fontWeight: 700 }}>{exp.amount}</td>
+                <td style={{ color: '#64748b' }}>{exp.date}</td>
                 <td>
-                  <div style={{display: 'flex', gap: '0.35rem', justifyContent: 'center'}}>
+                  <div style={{ display: 'flex', gap: '0.35rem', justifyContent: 'center' }}>
                     <button className="action-btn view">View</button>
                     <button className="action-btn edit">Edit</button>
                     <button className="action-btn download">Download</button>
-                    <button className="action-btn delete" onClick={() => handleDeleteExpense(exp.id)}>Delete</button>
+                    <button className="action-btn delete" onClick={() => onDeleteExpense(exp.id)}>Delete</button>
                   </div>
                 </td>
               </tr>
-            ))}
+            )) : (
+              <tr>
+                <td colSpan="7" style={{ padding: '5rem 0', textAlign: 'center', backgroundColor: '#fff' }}>
+                  <div style={{ color: '#94a3b8', fontSize: '0.875rem' }}>No expenses recorded</div>
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
-      {isModalOpen && <CreateExpenseModal onClose={() => setIsModalOpen(false)} onAddExpense={handleAddExpense} />}
+      {isModalOpen && <CreateExpenseModal onClose={() => setIsModalOpen(false)} onAddExpense={onAddExpense} />}
     </main>
   );
 }
 
-function PurchaseOrdersPage() {
+function PurchaseOrdersPage({ purchaseOrders, vendors, onAddPO, onDeletePO }) {
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const summaryCards = [
-    { title: 'Total Orders', count: '0', icon: <FileText size={20} />, color: 'blue' },
-    { title: 'Pending Approval', count: '0', icon: <Clock size={20} />, color: 'yellow' },
-    { title: 'Approved', count: '0', icon: <CheckCircle size={20} />, color: 'green' },
+    { title: 'Total Orders', count: purchaseOrders.length, icon: <FileText size={20} />, color: 'blue' },
+    { title: 'Pending Approval', count: purchaseOrders.filter(p => p.status === 'Pending').length, icon: <Clock size={20} />, color: 'yellow' },
+    { title: 'Approved', count: purchaseOrders.filter(p => p.status === 'Approved').length, icon: <CheckCircle size={20} />, color: 'green' },
     { title: 'Overdue', count: '0', icon: <AlertTriangle size={20} />, color: 'red' },
   ];
 
@@ -1292,7 +1552,7 @@ function PurchaseOrdersPage() {
         </div>
         <div className="total-products-badge">
           <div className="label">TOTAL PURCHASE ORDERS</div>
-          <div className="value">0</div>
+          <div className="value">{purchaseOrders.length}</div>
         </div>
       </div>
 
@@ -1314,7 +1574,7 @@ function PurchaseOrdersPage() {
           <input type="text" className="search-input" placeholder="Search by PO number..." />
         </div>
         <div className="toolbar-buttons po-buttons">
-          <button className="btn-action btn-po"><Plus size={16} /> New Purchase Order</button>
+          <button className="btn-action btn-po" onClick={() => setIsModalOpen(true)}><Plus size={16} /> New Purchase Order</button>
           <select className="po-select">
             <option>All Statuses</option>
           </select>
@@ -1336,27 +1596,43 @@ function PurchaseOrdersPage() {
               <th>DELIVERY</th>
               <th>STATUS</th>
               <th>TOTAL</th>
-              <th style={{textAlign: 'center'}}>ACTIONS</th>
+              <th style={{ textAlign: 'center' }}>ACTIONS</th>
             </tr>
           </thead>
           <tbody>
-            <tr>
-              <td colSpan="7" style={{padding: '5rem 0', textAlign: 'center', backgroundColor: '#fff'}}>
-                <div style={{color: '#94a3b8', fontSize: '0.875rem'}}>No purchase orders yet</div>
-                <div style={{color: '#cbd5e1', fontSize: '0.75rem', marginTop: '0.5rem'}}>Create your first PO to get started</div>
-              </td>
-            </tr>
+            {purchaseOrders.length > 0 ? purchaseOrders.map((po) => (
+              <tr key={po.id}>
+                <td style={{ fontWeight: 600, color: '#3b82f6' }}>{po.id}</td>
+                <td>{po.vendor}</td>
+                <td>{po.date}</td>
+                <td>{po.delivery}</td>
+                <td><span className={`status-badge ${po.status.toLowerCase()}`}>{po.status}</span></td>
+                <td style={{ fontWeight: 600 }}>{po.total}</td>
+                <td>
+                  <div style={{ display: 'flex', gap: '0.35rem', justifyContent: 'center' }}>
+                    <button className="action-btn view">View</button>
+                    <button className="action-btn delete" onClick={() => onDeletePO(po.id)}>Delete</button>
+                  </div>
+                </td>
+              </tr>
+            )) : (
+              <tr>
+                <td colSpan="7" style={{ padding: '5rem 0', textAlign: 'center', backgroundColor: '#fff' }}>
+                  <div style={{ color: '#94a3b8', fontSize: '0.875rem' }}>No purchase orders yet</div>
+                  <div style={{ color: '#cbd5e1', fontSize: '0.75rem', marginTop: '0.5rem' }}>Create your first PO to get started</div>
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
+      {isModalOpen && <CreatePurchaseOrderModal onClose={() => setIsModalOpen(false)} vendors={vendors} onAddPO={onAddPO} />}
     </main>
   );
 }
 
-function VendorManagementPage() {
-  const vendors = [
-    { id: '18', name: 'lms.shnoor.com', contact: 'Janjanam Lakshman babu', email: 'lakshman@shnoor.com', phone: '08688456559', status: 'Pending', limit: 'Not Set' }
-  ];
+function VendorManagementPage({ vendors, onAddVendor, onDeleteVendor }) {
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   return (
     <main className="dashboard-content products-page">
@@ -1367,18 +1643,18 @@ function VendorManagementPage() {
         </div>
         <div className="total-products-badge">
           <div className="label">TOTAL VENDORS</div>
-          <div className="value">1</div>
+          <div className="value">{vendors.length}</div>
         </div>
       </div>
 
       <div className="products-toolbar">
-        <div className="search-container" style={{maxWidth: '420px'}}>
+        <div className="search-container" style={{ maxWidth: '420px' }}>
           <Search size={18} className="search-icon" />
           <input type="text" className="search-input" placeholder="Search by vendor, email, phone..." />
         </div>
         <div className="toolbar-buttons">
           <button className="btn-filter"><Filter size={16} /> Filters</button>
-          <button className="btn-action"><Plus size={16} /> Create Vendor</button>
+          <button className="btn-action" onClick={() => setIsModalOpen(true)}><Plus size={16} /> Create Vendor</button>
           <button className="btn-export"><Download size={16} /> Export Excel</button>
           <button className="btn-filter"><Upload size={16} /> Import Excel</button>
         </div>
@@ -1395,7 +1671,7 @@ function VendorManagementPage() {
               <th>PHONE</th>
               <th>STATUS</th>
               <th>PO LIMIT</th>
-              <th style={{textAlign: 'center'}}>ACTIONS</th>
+              <th style={{ textAlign: 'center' }}>ACTIONS</th>
             </tr>
           </thead>
           <tbody>
@@ -1411,16 +1687,16 @@ function VendorManagementPage() {
                     </div>
                   </div>
                 </td>
-                <td style={{color: '#64748b'}}>{v.contact}</td>
-                <td><a href={`mailto:${v.email}`} style={{color: '#3b82f6', textDecoration: 'none'}}>{v.email}</a></td>
-                <td style={{color: '#64748b'}}>{v.phone}</td>
-                <td><span className="status-badge pending">Pending</span></td>
-                <td style={{color: '#64748b'}}>{v.limit}</td>
+                <td style={{ color: '#64748b' }}>{v.contact}</td>
+                <td><a href={`mailto:${v.email}`} style={{ color: '#3b82f6', textDecoration: 'none' }}>{v.email}</a></td>
+                <td style={{ color: '#64748b' }}>{v.phone}</td>
+                <td><span className={`status-badge ${v.status.toLowerCase()}`}>{v.status}</span></td>
+                <td style={{ color: '#64748b' }}>{v.limit}</td>
                 <td>
-                  <div style={{display: 'flex', gap: '0.35rem', justifyContent: 'center'}}>
-                    <button className="action-btn view" style={{padding: '0.2rem 0.6rem'}}>View</button>
-                    <button className="action-btn edit" style={{padding: '0.2rem 0.6rem'}}>Edit</button>
-                    <button className="action-btn delete" style={{padding: '0.2rem 0.6rem'}}>Delete</button>
+                  <div style={{ display: 'flex', gap: '0.35rem', justifyContent: 'center' }}>
+                    <button className="action-btn view" style={{ padding: '0.2rem 0.6rem' }}>View</button>
+                    <button className="action-btn edit" style={{ padding: '0.2rem 0.6rem' }}>Edit</button>
+                    <button className="action-btn delete" style={{ padding: '0.2rem 0.6rem' }} onClick={() => onDeleteVendor(v.id)}>Delete</button>
                   </div>
                 </td>
               </tr>
@@ -1435,29 +1711,93 @@ function VendorManagementPage() {
           <button className="btn-page-num active">1</button>
           <button className="btn-page">Next &rarr;</button>
         </div>
-        <div className="pagination-text">1 vendors</div>
+        <div className="pagination-text">{vendors.length} vendors</div>
       </div>
+      {isModalOpen && <CreateVendorModal onClose={() => setIsModalOpen(false)} onAddVendor={onAddVendor} />}
     </main>
   );
 }
 
 function App() {
   const [activeModule, setActiveModule] = useState(1);
+  const [user, setUser] = useState({ email: 'accountant@shnoor.com' });
+  const [emailConfig, setEmailConfig] = useState(null);
+  const [vendors, setVendors] = useState([
+    { id: '18', name: 'lms.shnoor.com', contact: 'Janjanam Lakshman babu', email: 'lakshman@shnoor.com', phone: '08688456559', status: 'Pending', limit: 'Not Set' }
+  ]);
+  const [purchaseOrders, setPurchaseOrders] = useState([]);
+  const [invoices, setInvoices] = useState([]);
+  const [products, setProducts] = useState([
+    { id: '1', name: 'Premium Service', desc: 'Standard professional consulting', gst: '18%', price: '₹15,000.00' }
+  ]);
+  const [expenses, setExpenses] = useState([
+    { id: '309', category: 'Travel', desc: 'Monthly business expense 15', amount: '₹546.00', date: '10 Dec 2025' },
+    { id: '308', category: 'Marketing', desc: 'Monthly business expense 14', amount: '₹2,185.00', date: '7 Jan 2026' },
+    { id: '307', category: 'Internet', desc: 'Monthly business expense 13', amount: '₹1,137.00', date: '1 Feb 2026' },
+    { id: '306', category: 'Software License', desc: 'Monthly business expense 12', amount: '₹4,125.00', date: '19 Jan 2026' },
+    { id: '305', category: 'Marketing', desc: 'Monthly business expense 11', amount: '₹3,725.00', date: '26 Jan 2026' },
+    { id: '304', category: 'Office Rent', desc: 'Monthly business expense 10', amount: '₹11,262.00', date: '21 Dec 2025' },
+    { id: '303', category: 'Cloud Services', desc: 'Monthly business expense 9', amount: '₹5,139.00', date: '20 Dec 2025' },
+  ]);
+
+  const handleLogout = () => {
+    // Simply reset user or handle session
+    console.log("Logging out...");
+  };
 
   return (
     <div className="app-container">
-      <Sidebar activeModule={activeModule} setActiveModule={setActiveModule} />
+      <Sidebar
+        activeModule={activeModule}
+        setActiveModule={setActiveModule}
+        onLogout={handleLogout}
+      />
       <div className="main-content">
-        <Topbar />
+        <Topbar
+          user={user}
+          emailConfig={emailConfig}
+          onSaveEmailConfig={setEmailConfig}
+        />
         {activeModule === 1 && <DashboardContent />}
-        {activeModule === 2 && <ProductsPage />}
-        {activeModule === 3 && <InvoicesPage />}
-        {activeModule === 4 && <ExpensesPage />}
-        {activeModule === 5 && <VendorManagementPage />}
-        {activeModule === 9 && <PurchaseOrdersPage />}
+        {activeModule === 2 && (
+          <ProductsPage
+            products={products}
+            onAddProduct={(p) => setProducts([p, ...products])}
+            onDeleteProduct={(id) => setProducts(products.filter(p => p.id !== id))}
+          />
+        )}
+        {activeModule === 3 && (
+          <InvoicesPage
+            invoices={invoices}
+            onAddInvoice={(inv) => setInvoices([inv, ...invoices])}
+            onDeleteInvoice={(id) => setInvoices(invoices.filter(inv => inv.id !== id))}
+          />
+        )}
+        {activeModule === 4 && (
+          <ExpensesPage
+            expenses={expenses}
+            onAddExpense={(exp) => setExpenses([exp, ...expenses])}
+            onDeleteExpense={(id) => setExpenses(expenses.filter(exp => exp.id !== id))}
+          />
+        )}
+        {activeModule === 5 && (
+          <VendorManagementPage
+            vendors={vendors}
+            onAddVendor={(v) => setVendors([v, ...vendors])}
+            onDeleteVendor={(id) => setVendors(vendors.filter(v => v.id !== id))}
+          />
+        )}
+        {activeModule === 9 && (
+          <PurchaseOrdersPage
+            purchaseOrders={purchaseOrders}
+            vendors={vendors}
+            onAddPO={(po) => setPurchaseOrders([po, ...purchaseOrders])}
+            onDeletePO={(id) => setPurchaseOrders(purchaseOrders.filter(po => po.id !== id))}
+          />
+        )}
         {activeModule !== 1 && activeModule !== 2 && activeModule !== 3 && activeModule !== 4 && activeModule !== 5 && activeModule !== 9 && (
           <main className="dashboard-content">
-             <div className="empty-state">Module not built yet.</div>
+            <div className="empty-state">Module not built yet.</div>
           </main>
         )}
       </div>
